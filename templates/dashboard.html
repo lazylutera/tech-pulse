@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tech Job Trends Analytics Dashboard — North America market insights and career future-proofing.">
+    <title>Tech Pulse — Job Trends Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* ── Reset & Base ───────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-orange: #f97316;
+            --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+            --gradient-card: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.05) 100%);
+            --glass-blur: blur(20px);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated Background ────────────────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            animation: bgFloat 20s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, -1%) rotate(1deg); }
+            66% { transform: translate(-1%, 2%) rotate(-1deg); }
+        }
+
+        /* ── Layout ─────────────────────────────────────────────────── */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────── */
+        header {
+            padding: 40px 0 20px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+
+        h1 span {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .meta {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-blue);
+        }
+
+        /* ── KPI Cards ──────────────────────────────────────────────── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-hero);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .kpi-card:hover::before { opacity: 1; }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-label {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ── Glass Card ─────────────────────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* ── Chart Grid ─────────────────────────────────────────────── */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-grid .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-height: 420px;
+        }
+
+        /* ── Insights Panel ─────────────────────────────────────────── */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .insight-section h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .insight-section .summary {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .action-item {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            transition: background 0.2s ease;
+        }
+
+        .action-item:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .action-item .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .action-item .action-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .action-item .urgency {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .urgency-high { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+        .urgency-medium { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+        .urgency-strategic { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+        .urgency-ongoing { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+        .urgency-exploratory { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+
+        .action-item .action-detail {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        /* ── Career Paths ───────────────────────────────────────────── */
+        .career-paths-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .path-card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 22px;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .path-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .path-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-purple);
+        }
+
+        .path-card .stages {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', monospace;
+        }
+
+        .path-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .path-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .path-tag.salary { background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); }
+        .path-tag.signal { background: rgba(249, 115, 22, 0.1); color: var(--accent-orange); }
+
+        /* ── Trends Table ───────────────────────────────────────────── */
+        .trend-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .trend-table th {
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .trend-table td {
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .trend-table tr:hover td {
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .maturity-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .maturity-early { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); }
+        .maturity-growth { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .maturity-mainstream { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+        .maturity-emerging { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+
+        /* ── Sources ────────────────────────────────────────────────── */
+        .sources {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .source-tag {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 116, 139, 0.15);
+        }
+
+        /* ── Footer ─────────────────────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 40px 0 30px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        footer a { color: var(--accent-blue); text-decoration: none; }
+
+        /* ── Responsive ─────────────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .chart-grid, .insights-grid { grid-template-columns: 1fr; }
+            .career-paths-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Animations ─────────────────────────────────────────────── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card, .kpi-card, .path-card {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .kpi-card:nth-child(2) { animation-delay: 0.05s; }
+        .kpi-card:nth-child(3) { animation-delay: 0.1s; }
+        .kpi-card:nth-child(4) { animation-delay: 0.15s; }
+        .kpi-card:nth-child(5) { animation-delay: 0.2s; }
+        .kpi-card:nth-child(6) { animation-delay: 0.25s; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ── Header ──────────────────────────────────────────────────── -->
+    <header>
+        <div class="logo">Tech Pulse</div>
+        <h1>North America <span>Tech Job Trends</span></h1>
+        <p class="subtitle">Real-time market intelligence & career future-proofing insights</p>
+        <div class="meta">
+            <span class="meta-badge">📅 {{ generated_at[:10] }}</span>
+            <span class="meta-badge">📊 {{ data_sources | length }} data sources</span>
+            {% if live_jobs_count %}<span class="meta-badge">🔴 {{ live_jobs_count }} live postings analyzed</span>{% endif %}
+        </div>
+    </header>
+
+    <!-- ── KPI Cards ───────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value">{{ "{:,}".format(market_snapshot.total_tech_openings_na | default(0)) }}</div>
+            <div class="kpi-label">Total Tech Openings (NA)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ market_snapshot.yoy_growth_pct | default(0) }}%</div>
+            <div class="kpi-label">Year-over-Year Growth</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ market_snapshot.avg_days_to_fill | default(0) }} days</div>
+            <div class="kpi-label">Avg. Time to Fill</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ market_snapshot.remote_pct | default(0) }}%</div>
+            <div class="kpi-label">Remote Opportunities</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ market_snapshot.hybrid_pct | default(0) }}%</div>
+            <div class="kpi-label">Hybrid Roles</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ top_skills | length }}</div>
+            <div class="kpi-label">Skills Tracked</div>
+        </div>
+    </div>
+
+    <!-- ── Charts ──────────────────────────────────────────────────── -->
+    <div class="chart-grid">
+        <!-- Top Skills Bar Chart -->
+        <div class="card full-width">
+            <div class="card-title">🔥 Top In-Demand Skills</div>
+            <div class="card-subtitle">Percentage of tech job postings mentioning each skill</div>
+            <div class="chart-wrapper">
+                <canvas id="skillsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Skill Category Donut -->
+        <div class="card">
+            <div class="card-title">📂 Skill Category Distribution</div>
+            <div class="card-subtitle">Aggregate demand across skill families</div>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Role Demand Bar -->
+        <div class="card">
+            <div class="card-title">💼 Top Roles by Demand</div>
+            <div class="card-subtitle">Number of open positions by role</div>
+            <div class="chart-wrapper">
+                <canvas id="rolesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Salary Chart -->
+        <div class="card">
+            <div class="card-title">💰 Average Salaries by Role</div>
+            <div class="card-subtitle">USD average annual compensation</div>
+            <div class="chart-wrapper">
+                <canvas id="salaryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Location Chart -->
+        <div class="card">
+            <div class="card-title">📍 Jobs by Location</div>
+            <div class="card-subtitle">Tech openings by metro area</div>
+            <div class="chart-wrapper">
+                <canvas id="locationChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Growth Radar -->
+        <div class="card full-width">
+            <div class="card-title">🎯 Demand vs. Growth Potential by Category</div>
+            <div class="card-subtitle">Radar view — higher = more opportunity</div>
+            <div class="chart-wrapper" style="max-height: 450px;">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Fastest Growing Skills -->
+        <div class="card full-width">
+            <div class="card-title">🚀 Fastest Growing Skills (YoY)</div>
+            <div class="card-subtitle">Year-over-year demand growth — the skills gaining momentum fastest</div>
+            <div class="chart-wrapper">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Emerging Trends Table ────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-title">🌊 Emerging Technology Trends</div>
+        <div class="card-subtitle">Emerging areas reshaping the tech landscape</div>
+        <table class="trend-table">
+            <thead>
+                <tr>
+                    <th>Trend</th>
+                    <th>Growth</th>
+                    <th>Maturity</th>
+                    <th>Career Implication</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in emerging_trends_display %}
+                <tr>
+                    <td style="font-weight: 600;">{{ t.trend }}</td>
+                    <td style="color: var(--accent-emerald); font-weight: 600;">{{ t.growth }}</td>
+                    <td>
+                        <span class="maturity-badge maturity-{{ t.maturity | lower | replace(' ', '-') | replace('early-adoption', 'early') }}">
+                            {{ t.maturity }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.82rem; color: var(--text-secondary);">{{ t.implication }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── Career Insights ─────────────────────────────────────────── -->
+    <div class="insights-grid">
+        <!-- Short-term -->
+        <div class="card insight-section">
+            <div class="card-title">⚡ {{ insights.short_term.title }}</div>
+            <p class="summary">{{ insights.short_term.summary }}</p>
+            {% for a in insights.short_term.action_items %}
+            <div class="action-item">
+                <div class="action-header">
+                    <span class="action-name">{{ a.action }}</span>
+                    <span class="urgency urgency-{{ a.urgency | lower }}">{{ a.urgency }}</span>
+                </div>
+                <p class="action-detail">{{ a.detail }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Long-term -->
+        <div class="card insight-section">
+            <div class="card-title">🔮 {{ insights.long_term.title }}</div>
+            <p class="summary">{{ insights.long_term.summary }}</p>
+            {% for a in insights.long_term.action_items %}
+            <div class="action-item">
+                <div class="action-header">
+                    <span class="action-name">{{ a.action }}</span>
+                    <span class="urgency urgency-{{ a.urgency | lower }}">{{ a.urgency }}</span>
+                </div>
+                <p class="action-detail">{{ a.detail }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ── Career Paths ────────────────────────────────────────────── -->
+    <div class="card" style="padding: 28px 28px 12px;">
+        <div class="card-title">🗺️ Recommended Career Paths</div>
+        <div class="card-subtitle">Strategic progression routes based on current market signals</div>
+    </div>
+    <div class="career-paths-grid">
+        {% for path in insights.career_paths %}
+        <div class="path-card">
+            <h4>{{ path.path }}</h4>
+            <div class="stages">{{ path.stages[0] }}</div>
+            <div class="path-meta">
+                {% for role in path.target_roles %}
+                <span class="path-tag">{{ role }}</span>
+                {% endfor %}
+                <span class="path-tag salary">{{ path.salary_range }}</span>
+                <span class="path-tag signal">{{ path.demand_signal[:40] }}…</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Data Sources ────────────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-title">📡 Data Sources</div>
+        <div class="sources">
+            {% for src in data_sources %}
+            <span class="source-tag">{{ src }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer>
+        Generated by <strong>Tech Pulse Agent</strong> on {{ generated_at[:10] }}<br>
+        Market data reflects North America Q1 2026 trends.
+    </footer>
+</div>
+
+<!-- ── Chart.js Scripts ──────────────────────────────────────────────── -->
+<script>
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const PALETTE = [
+        '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
+        '#f43f5e', '#f97316', '#ec4899', '#14b8a6', '#6366f1',
+        '#84cc16', '#e879f9',
+    ];
+
+    // ── Top Skills ────────────────────────────────────────────────────
+    const skillsData = {{ top_skills_json }};
+    new Chart(document.getElementById('skillsChart'), {
+        type: 'bar',
+        data: {
+            labels: skillsData.map(s => s.name),
+            datasets: [{
+                label: '% of Postings',
+                data: skillsData.map(s => s.mentions_pct),
+                backgroundColor: skillsData.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+                borderColor: skillsData.map((_, i) => PALETTE[i % PALETTE.length]),
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.raw}% of tech postings`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + '%' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ── Skill Categories Donut ────────────────────────────────────────
+    const catData = {{ categories_json }};
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: catData.map(c => c.category),
+            datasets: [{
+                data: catData.map(c => c.total_mentions),
+                backgroundColor: catData.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+                borderColor: '#0a0e1a',
+                borderWidth: 2,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: { legend: { position: 'right', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle' } } },
+        }
+    });
+
+    // ── Roles Bar ─────────────────────────────────────────────────────
+    const rolesData = {{ roles_json }};
+    new Chart(document.getElementById('rolesChart'), {
+        type: 'bar',
+        data: {
+            labels: rolesData.map(r => r.role),
+            datasets: [{
+                label: 'Openings',
+                data: rolesData.map(r => r.postings),
+                backgroundColor: rolesData.map((_, i) => PALETTE[i % PALETTE.length] + 'aa'),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString() + ' openings' } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => (v / 1000) + 'K' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ── Salary Chart ──────────────────────────────────────────────────
+    const salaryData = {{ salary_json }};
+    new Chart(document.getElementById('salaryChart'), {
+        type: 'bar',
+        data: {
+            labels: salaryData.map(s => s.role),
+            datasets: [{
+                label: 'Avg Salary (USD)',
+                data: salaryData.map(s => s.avg_salary_usd),
+                backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                borderColor: '#10b981',
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString() } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => '$' + (v / 1000) + 'K' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ── Location Chart ────────────────────────────────────────────────
+    const locData = {{ locations_json }};
+    new Chart(document.getElementById('locationChart'), {
+        type: 'bar',
+        data: {
+            labels: locData.map(l => l.location),
+            datasets: [{
+                label: 'Openings',
+                data: locData.map(l => l.postings),
+                backgroundColor: locData.map((_, i) => PALETTE[i % PALETTE.length] + 'aa'),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString() + ' openings' } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => (v / 1000) + 'K' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ── Radar ─────────────────────────────────────────────────────────
+    const radarData = {{ radar_json }};
+    new Chart(document.getElementById('radarChart'), {
+        type: 'radar',
+        data: {
+            labels: radarData.map(r => r.category),
+            datasets: [
+                {
+                    label: 'Current Demand',
+                    data: radarData.map(r => r.current_demand),
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#3b82f6',
+                },
+                {
+                    label: 'Growth Potential',
+                    data: radarData.map(r => r.growth_potential),
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#8b5cf6',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255,255,255,0.06)' },
+                    grid: { color: 'rgba(255,255,255,0.06)' },
+                    ticks: { display: false },
+                }
+            },
+            plugins: { legend: { labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } } }
+        }
+    });
+
+    // ── Fastest Growing ───────────────────────────────────────────────
+    const growthData = {{ growth_json }};
+    new Chart(document.getElementById('growthChart'), {
+        type: 'bar',
+        data: {
+            labels: growthData.map(g => g.name),
+            datasets: [{
+                label: 'YoY Growth %',
+                data: growthData.map(g => g.yoy_change),
+                backgroundColor: growthData.map(g => {
+                    if (g.yoy_change >= 80) return 'rgba(244, 63, 94, 0.7)';
+                    if (g.yoy_change >= 30) return 'rgba(249, 115, 22, 0.7)';
+                    return 'rgba(59, 130, 246, 0.7)';
+                }),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => '+' + ctx.raw + '% YoY' } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => '+' + v + '%' } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
